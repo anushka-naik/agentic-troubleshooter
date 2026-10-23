@@ -201,117 +201,23 @@ A set that can separate the systems needs cases where investigation changes the 
 
 ## 7. Observability
 
-Set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` to trace every run in LangSmith. Each investigation appears as one `troubleshoot` trace containing:
-
-- one span per graph node;
-- nested LLM calls, named `triage`, `grade_documents`, `analyze_code` and `diagnose`;
-- tool spans: `hybrid_search` (retriever), `sandbox.run_python`, `static_analysis` and `github.search_issues`.
-
-The run ID shown in the UI is the LangSmith run ID. Without LangSmith, the same step-level information is visible in the UI's agent timeline and in the report's `steps` field.
+With `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` set, each investigation is one LangSmith trace containing every graph node, LLM call and tool call. The same steps are shown live in the UI timeline.
 
 ## 8. Getting started
 
-### Requirements
-
-Python 3.11+, and a Groq, xAI or OpenAI API key for investigations (Groq has a free tier). Everything else runs locally. The first index build downloads the ~130 MB embedding model.
-
-### Local setup
+Requires Python 3.11+ and an API key for Groq (default, free tier), xAI or OpenAI.
 
 ```bash
-make setup             # creates .venv, installs dependencies, copies .env.example to .env
-# edit .env and set GROQ_API_KEY (or choose another LLM_PROVIDER and set its key)
-make index             # optional: built automatically on first start
-make run               # http://localhost:8000
+make setup     # create .venv, install dependencies, copy .env.example to .env
+               # then set GROQ_API_KEY in .env
+make run       # http://localhost:8000
+make test      # 26 tests, no API key needed
+make eval      # agentic vs. RAG-only baseline
 ```
 
-Without `make`:
+To use a different provider, set `LLM_PROVIDER` and the matching key; [`.env.example`](.env.example) lists all settings. For Docker, run `docker compose up --build`.
 
-```bash
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt -r requirements-dev.txt
-cp .env.example .env
-uvicorn troubleshooter.api:app --port 8000
-```
-
-### Configuration
-
-All settings live in `.env` (see [`.env.example`](.env.example)):
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `LLM_PROVIDER` | `groq` | `groq`, `xai` (Grok) or `openai` |
-| `GROQ_API_KEY`, `GROQ_MODEL` | –, `openai/gpt-oss-20b` | Used when the provider is `groq` |
-| `XAI_API_KEY`, `XAI_MODEL` | –, `grok-4` | Used when the provider is `xai` |
-| `LLM_REASONING_EFFORT` | `low` | For reasoning models such as gpt-oss; `none` to omit |
-| `OPENAI_API_KEY`, `OPENAI_MODEL` | –, `gpt-4.1-mini` | Used when the provider is `openai` |
-| `LLM_TEMPERATURE` | `0` | Set to `none` for models that do not accept a temperature |
-| `ENABLE_CODE_EXECUTION` | `true` | Disables the sandbox (fixes become `not_run`) |
-| `ENABLE_GITHUB_SEARCH` | `true` | Allows the GitHub researcher |
-| `MAX_REVISIONS` | `1` | Revision budget for the self-correction loop |
-| `RETRIEVAL_K`, `MIN_RELEVANT_CHUNKS` | `8`, `2` | Retrieval depth and the coverage threshold |
-
-### Web interface
-
-The interface at `http://localhost:8000` has:
-
-- one-click scenarios;
-- a live agent pipeline and timeline, streamed over server-sent events, with expandable details for each step;
-- a report showing the root cause, clickable citations, each fix as a diff with its validation status, warnings and the evidence;
-- an **Architecture** tab that renders the compiled LangGraph.
-
-### CLI
-
-```bash
-python -m troubleshooter.cli --scenario none-sort
-python -m troubleshooter.cli --query "$(cat traceback.txt)" --code-file app.py
-python -m troubleshooter.cli --scenario json-empty --json
-```
-
-### API
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/troubleshoot` | Run an investigation; returns the `Report` JSON |
-| `POST` | `/api/troubleshoot/stream` | Same, as server-sent events: `start`, `step`…, `report` |
-| `GET` | `/api/health` | Model, index size, enabled tools |
-| `GET` | `/api/scenarios` | Example scenarios |
-| `GET` | `/api/graph` | Mermaid source of the compiled graph |
-
-Interactive docs are available at `/docs`. Sample request ([`examples/request.json`](examples/request.json)):
-
-```bash
-curl -s http://localhost:8000/api/troubleshoot \
-  -H "Content-Type: application/json" \
-  -d @examples/request.json | python -m json.tool
-```
-
-The response contains `root_cause`, `confidence`, `reproduced`, `fixes[]` (each with `diff`, `citations` and `validation.status`/`detail`), `sources[]`, `warnings[]`, `steps[]`, `llm_calls` and a rendered `markdown` report.
-
-### Docker
-
-```bash
-cp .env.example .env    # set GROQ_API_KEY
-docker compose up --build
-```
-
-The image runs as a non-root user and bakes in the embedding model and index (`HF_HUB_OFFLINE=1` at runtime). It also defines a health check on `/api/health`.
-
-### Deploying to AWS EC2
-
-The container is self-contained, so deployment is a matter of running the image:
-
-1. Launch an instance with at least 2 vCPUs and 4 GB of RAM (for example `t3.medium`) and install Docker.
-2. Store the API key in SSM Parameter Store or Secrets Manager and render it into `.env` at boot, rather than baking it into the image.
-3. Run `docker compose up -d` and expose port 8000 through an Application Load Balancer or a reverse proxy with TLS. Restrict the security group to the load balancer.
-4. Because the sandbox executes submitted code, keep the instance in a private subnet, or restrict outbound traffic, before opening the service to untrusted users.
-
-### Tests
-
-```bash
-make test
-```
-
-The 26 tests cover the traceback parser, the sandbox (exceptions, timeouts, stdlib-only isolation), static analysis, retrieval quality on known queries, the API, and the full graph run with a scripted model: a verified fix, the revision loop, the revision budget, invented citations, the no-code path, streaming order and GitHub escalation.
+**Other interfaces.** CLI: `python -m troubleshooter.cli --scenario none-sort`. REST: `POST /api/troubleshoot`, or `/api/troubleshoot/stream` for server-sent events. Interactive docs are at `/docs`, and [`examples/request.json`](examples/request.json) is a sample request.
 
 ## 9. Project structure
 
