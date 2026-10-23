@@ -1,0 +1,18 @@
+[project]
+name = "agentic-troubleshooter"
+version = "0.1.0"
+description = "Multi-agent Python debugging assistant built with LangGraph, hybrid RAG and sandboxed fix validation."
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = ["E731"]

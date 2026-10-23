@@ -1,0 +1,11 @@
+services:
+  troubleshooter:
+    build: .
+    image: agentic-troubleshooter:latest
+    env_file: .env
+    ports:
+      - "8000:8000"
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+    restart: unless-stopped

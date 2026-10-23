@@ -1,0 +1,5 @@
+{
+  "query": "My leaderboard function crashes with:\n\nTraceback (most recent call last):\n  File \"leaderboard.py\", line 6, in <module>\n    print(top_scores([42, 17, 99, 63]))\n  File \"leaderboard.py\", line 3, in top_scores\n    return ranked[:3]\nTypeError: 'NoneType' object is not subscriptable",
+  "code": "def top_scores(scores):\n    ranked = scores.sort(reverse=True)\n    return ranked[:3]\n\n\nprint(top_scores([42, 17, 99, 63]))\n",
+  "enable_github": false
+}

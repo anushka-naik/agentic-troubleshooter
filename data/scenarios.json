@@ -1,0 +1,79 @@
+[
+  {
+    "id": "none-sort",
+    "title": "NoneType not subscriptable",
+    "query": "My leaderboard function crashes with:\n\nTraceback (most recent call last):\n  File \"leaderboard.py\", line 6, in <module>\n    print(top_scores([42, 17, 99, 63]))\n  File \"leaderboard.py\", line 3, in top_scores\n    return ranked[:3]\nTypeError: 'NoneType' object is not subscriptable",
+    "code": "def top_scores(scores):\n    ranked = scores.sort(reverse=True)\n    return ranked[:3]\n\n\nprint(top_scores([42, 17, 99, 63]))\n",
+    "expected": {
+      "error_type": "TypeError",
+      "root_cause_keywords": [["sort"], ["none", "in place", "in-place"]],
+      "verifiable": true
+    }
+  },
+  {
+    "id": "dict-mutation",
+    "title": "Dictionary changed size during iteration",
+    "query": "Removing out-of-stock items fails:\n\nTraceback (most recent call last):\n  File \"stock.py\", line 3, in <module>\n    for item, qty in inventory.items():\nRuntimeError: dictionary changed size during iteration",
+    "code": "inventory = {\"apples\": 0, \"pears\": 4, \"plums\": 0, \"figs\": 2}\n\nfor item, qty in inventory.items():\n    if qty == 0:\n        del inventory[item]\n\nprint(inventory)\n",
+    "expected": {
+      "error_type": "RuntimeError",
+      "root_cause_keywords": [["iterat"], ["delet", "remov", "mutat", "modif"]],
+      "verifiable": true
+    }
+  },
+  {
+    "id": "unbound-local",
+    "title": "UnboundLocalError on a counter",
+    "query": "Traceback (most recent call last):\n  File \"events.py\", line 9, in <module>\n    record_event()\n  File \"events.py\", line 5, in record_event\n    counter += 1\n    ^^^^^^^\nUnboundLocalError: cannot access local variable 'counter' where it is not associated with a value",
+    "code": "counter = 0\n\n\ndef record_event():\n    counter += 1\n    return counter\n\n\nrecord_event()\nprint(counter)\n",
+    "expected": {
+      "error_type": "UnboundLocalError",
+      "root_cause_keywords": [["local"], ["global", "assign", "scope"]],
+      "verifiable": true
+    }
+  },
+  {
+    "id": "json-empty",
+    "title": "JSONDecodeError on an empty body",
+    "query": "Parsing an API response sometimes fails with json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0). The endpoint returns 204 when there is nothing new.",
+    "code": "import json\n\n\ndef parse_payload(raw):\n    return json.loads(raw)\n\n\nresponse_body = \"\"\nprint(parse_payload(response_body))\n",
+    "expected": {
+      "error_type": "JSONDecodeError",
+      "root_cause_keywords": [["empty"], ["json"]],
+      "verifiable": true
+    }
+  },
+  {
+    "id": "coroutine-not-awaited",
+    "title": "Coroutine never awaited",
+    "query": "I get TypeError: 'coroutine' object is not subscriptable and also RuntimeWarning: coroutine 'fetch_user' was never awaited.",
+    "code": "import asyncio\n\n\nasync def fetch_user(user_id):\n    await asyncio.sleep(0.01)\n    return {\"id\": user_id, \"name\": \"Ada\"}\n\n\ndef main():\n    user = fetch_user(1)\n    print(user[\"name\"])\n\n\nmain()\n",
+    "expected": {
+      "error_type": "TypeError",
+      "root_cause_keywords": [["await"], ["coroutine"]],
+      "verifiable": true
+    }
+  },
+  {
+    "id": "module-not-found",
+    "title": "ModuleNotFoundError after pip install",
+    "query": "ModuleNotFoundError: No module named 'pandas' even though I ran pip install pandas. I'm running the script from VS Code.",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\"region\": [\"east\", \"west\"], \"sales\": [120, 95]})\nprint(df[\"sales\"].sum())\n",
+    "expected": {
+      "error_type": "ModuleNotFoundError",
+      "root_cause_keywords": [["interpreter", "environment", "venv"]],
+      "verifiable": false
+    }
+  },
+  {
+    "id": "mutable-default",
+    "title": "List keeps growing between calls",
+    "query": "No error, but every call to add_tag returns tags from previous calls too. Why does the default list keep growing?",
+    "code": "def add_tag(tag, tags=[]):\n    tags.append(tag)\n    return tags\n\n\nprint(add_tag(\"urgent\"))\nprint(add_tag(\"billing\"))\n",
+    "expected": {
+      "error_type": null,
+      "root_cause_keywords": [["default"], ["once", "shared", "mutable"]],
+      "verifiable": true
+    }
+  }
+]

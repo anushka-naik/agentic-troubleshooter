@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agentic Troubleshooter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%237c9cff%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2a5 5 0 0 1 5 5v1h1.5a1.5 1.5 0 0 1 0 3H17v1.5l2.6 1.5a1.5 1.5 0 1 1-1.5 2.6L16.4 16A5 5 0 0 1 7.6 16l-1.7 1.6a1.5 1.5 0 1 1-1.5-2.6L7 13.5V11H5.5a1.5 1.5 0 0 1 0-3H7V7a5 5 0 0 1 5-5Z"/></svg>
+      </div>
+      <div>
+        <h1>Agentic Troubleshooter</h1>
+        <p>Multi-agent Python debugging with grounded, validated fixes</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="investigate" role="tab">Investigate</button>
+      <button class="tab" data-tab="architecture" role="tab">Architecture</button>
+    </nav>
+    <div class="status" id="status"></div>
+  </header>
+
+  <main>
+    <section id="tab-investigate" class="tab-panel active">
+      <div class="layout">
+        <aside class="panel input-panel">
+          <div class="banner hidden" id="key-banner">
+            <strong>No API key configured.</strong> Add <code id="key-name">GROQ_API_KEY</code> to <code>.env</code> and restart the server to run investigations. Retrieval, the sandbox and the UI work without it.
+          </div>
+
+          <h2>Scenarios</h2>
+          <div class="chips" id="scenarios"></div>
+
+          <label for="query">Error, traceback or question</label>
+          <textarea id="query" rows="9" spellcheck="false" placeholder="Paste a traceback or describe the problem..."></textarea>
+
+          <label for="code">Code <span class="muted">(optional, runs in a standard-library sandbox)</span></label>
+          <textarea id="code" rows="12" spellcheck="false" class="mono" placeholder="def main(): ..."></textarea>
+
+          <label class="toggle">
+            <input type="checkbox" id="github" checked>
+            <span>Allow GitHub issue search</span>
+          </label>
+
+          <button id="run" class="primary">Investigate</button>
+        </aside>
+
+        <section class="results">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Agent pipeline</h2>
+              <span class="muted" id="run-meta"></span>
+            </div>
+            <ol class="pipeline" id="pipeline"></ol>
+            <ol class="timeline" id="timeline">
+              <li class="empty">Pick a scenario or paste an error, then run an investigation to watch the agents work.</li>
+            </ol>
+          </div>
+
+          <div class="panel hidden" id="report"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="tab-architecture" class="tab-panel">
+      <div class="panel arch">
+        <h2>LangGraph topology</h2>
+        <p class="muted">Rendered from the compiled graph (<code>/api/graph</code>). Every worker reports back to the supervisor, which is the only node that decides what runs next.</p>
+        <div class="mermaid-wrap" id="mermaid"></div>
+        <div class="agent-grid" id="agent-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
